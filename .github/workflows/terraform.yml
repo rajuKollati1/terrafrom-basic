@@ -1,9 +1,12 @@
-name: Terraform Plan and Apply
+name: Terraform AKS Deployment
 
 on:
-  push:
-    branches:
-      - feature
+  workflow_dispatch:  # This allows the workflow to be manually triggered
+    inputs:           # Optional: Define inputs if you want to pass parameters
+      cluster_name:   # Example of an input field for the manual trigger
+        description: "Name of the AKS Cluster"
+        required: true
+        default: "my-cluster"
 
 jobs:
   terraform:
