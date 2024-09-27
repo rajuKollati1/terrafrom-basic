@@ -47,6 +47,12 @@ jobs:
         echo "AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}"
         echo "RESOURCE_GROUP=${RESOURCE_GROUP}"
 
+        # Check if values are captured correctly
+        if [ -z "$AKS_CLUSTER_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
+          echo "Failed to capture AKS_CLUSTER_NAME or RESOURCE_GROUP"
+          exit 1
+        fi
+
         # Store the values in GITHUB_ENV
         echo "AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}" >> $GITHUB_ENV
         echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV
