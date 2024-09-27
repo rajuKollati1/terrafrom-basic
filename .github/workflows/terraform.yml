@@ -39,9 +39,9 @@ jobs:
     - name: Capture Terraform Outputs
       id: outputs
       run: |
-        # Capture raw output of the Terraform variables and remove quotes using jq
-        AKS_CLUSTER_NAME=$(terraform output -json aks_cluster_name | jq -r)
-        RESOURCE_GROUP=$(terraform output -json aks_resource_group | jq -r)
+        # Capture raw output of the Terraform variables without using JSON
+        AKS_CLUSTER_NAME=$(terraform output -raw aks_cluster_name)
+        RESOURCE_GROUP=$(terraform output -raw aks_resource_group)
 
         # Debugging outputs to verify correctness
         echo "AKS_CLUSTER_NAME is $AKS_CLUSTER_NAME"
