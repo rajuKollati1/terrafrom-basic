@@ -31,3 +31,27 @@ jobs:
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main'
       run: terraform apply -auto-approve
+
+    # Step to capture Terraform output (Resource Group and AKS Cluster Name)
+    - name: Capture Terraform Outputs
+      id: outputs
+      run: |
+        echo "AKS_CLUSTER_NAME=$(terraform output -raw aks_cluster_name)" >> $GITHUB_ENV
+        echo "RESOURCE_GROUP=$(terraform output -raw aks_resource_group)" >> $GITHUB_ENV
+
+    # Step to get AKS credentials using Terraform outputs
+    - name: Get AKS Credentials
+      run: |
+        az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} \
+                               --name ${{ env.AKS_CLUSTER_NAME }} \
+                               --admin
+
+    # Install kubectl
+    - name: Set up Kubectl
+      uses: azure/setup-kubectl@v3
+
+    # Deploy application to AKS using Kubernetes manifests
+    - name: Deploy to AKS
+      run: |
+        kubectl apply -f k8s-manifests/deployment.yaml
+        kubectl apply -f k8s-manifests/service.yaml
