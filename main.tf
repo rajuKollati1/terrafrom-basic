@@ -73,3 +73,7 @@ output "aks_cluster_kube_config" {
   value     = azurerm_kubernetes_cluster.aks.kube_config_raw
   sensitive = true  # Mark this as sensitive
 }
+
+output "aks_resource_group" {
+  value = azurerm_resource_group.aks_rg.name
+}
