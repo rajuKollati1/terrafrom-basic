@@ -24,14 +24,18 @@ jobs:
         az login --service-principal -u ${{ secrets.ARM_CLIENT_ID }} \
                  -p ${{ secrets.ARM_CLIENT_SECRET }} \
                  --tenant ${{ secrets.ARM_TENANT_ID }}
-
-    # Check and force-unlock if a lock exists
-    - name: Check for Terraform Lock
+                 
+   # Force unlock Terraform state if locked
+    - name: Force Unlock State
+      if: always()
       run: |
-        set +e
-        terraform state pull | grep -q '"ID":' && terraform force-unlock $(terraform state pull | jq -r '.ID')
-        set -e
-      continue-on-error: true
+        LOCK_ID=$(terraform state pull | jq -r '.serial' 2>/dev/null || echo "")
+        if [ -n "$LOCK_ID" ]; then
+          echo "State is locked. Forcing unlock..."
+          terraform force-unlock $LOCK_ID || true
+        else
+          echo "No lock detected."
+        fi
 
     - name: Terraform Init
       run: terraform init
