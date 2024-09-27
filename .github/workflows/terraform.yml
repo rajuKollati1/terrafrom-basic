@@ -31,10 +31,14 @@ jobs:
     - name: Terraform Plan
       run: terraform plan
 
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main'
-      run: terraform apply -auto-approve
+    - name: Terraform Destroy
+      run: terraform destroy
 
+  # - name: Terraform Apply
+  #  if: github.ref == 'refs/heads/main'
+   # run: terraform apply -auto-approve
+      
+    
     # Step to read variables from tfvars file
     - name: Get Resource Group and Cluster Name
       id: get-vars
