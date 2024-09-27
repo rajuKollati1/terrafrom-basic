@@ -35,13 +35,12 @@ jobs:
       if: github.ref == 'refs/heads/main'
       run: terraform apply -auto-approve
 
-    # Step to capture Terraform output (Resource Group and AKS Cluster Name)
     - name: Capture Terraform Outputs
       id: outputs
       run: |
-        AKS_CLUSTER_NAME=$(terraform output -raw aks_cluster_name)
-        RESOURCE_GROUP=$(terraform output -raw aks_resource_group)
-        
+        AKS_CLUSTER_NAME=$(terraform output -json aks_cluster_name | jq -r '.')
+        RESOURCE_GROUP=$(terraform output -json aks_resource_group | jq -r '.')
+
         # Debugging outputs to verify correctness
         echo "AKS_CLUSTER_NAME is $AKS_CLUSTER_NAME"
         echo "RESOURCE_GROUP is $RESOURCE_GROUP"
