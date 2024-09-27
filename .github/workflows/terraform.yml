@@ -38,22 +38,34 @@ jobs:
     - name: Capture Terraform Outputs
       id: outputs
       run: |
-        AKS_CLUSTER_NAME=$(terraform output -json aks_cluster_name | jq -r '.')
-        RESOURCE_GROUP=$(terraform output -json aks_resource_group | jq -r '.')
+        # Capture raw output of the Terraform variables
+        raw_cluster_name=$(terraform output -json aks_cluster_name 2>/dev/null || terraform output aks_cluster_name)
+        raw_resource_group=$(terraform output -json aks_resource_group 2>/dev/null || terraform output aks_resource_group)
+        
+        # Debug raw outputs to verify what we're working with
+        echo "Raw AKS Cluster Name: $raw_cluster_name"
+        echo "Raw Resource Group: $raw_resource_group"
 
-        # Debugging outputs to verify correctness
+        # Handle JSON parsing only if output is in JSON format
+        if [[ $raw_cluster_name == \{* ]]; then
+          AKS_CLUSTER_NAME=$(echo "$raw_cluster_name" | jq -r '.value // empty')
+        else
+          AKS_CLUSTER_NAME=$raw_cluster_name
+        fi
+
+        if [[ $raw_resource_group == \{* ]]; then
+          RESOURCE_GROUP=$(echo "$raw_resource_group" | jq -r '.value // empty')
+        else
+          RESOURCE_GROUP=$raw_resource_group
+        fi
+
+        # Output final values for debugging
         echo "AKS_CLUSTER_NAME is $AKS_CLUSTER_NAME"
         echo "RESOURCE_GROUP is $RESOURCE_GROUP"
 
+        # Export values to GitHub environment
         echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
         echo "RESOURCE_GROUP=$RESOURCE_GROUP" >> $GITHUB_ENV
-
-    # Step to get AKS credentials using Terraform outputs
-    - name: Get AKS Credentials
-      run: |
-        az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} \
-                               --name ${{ env.AKS_CLUSTER_NAME }} \
-                               --admin
 
     # Install kubectl
     - name: Set up Kubectl
