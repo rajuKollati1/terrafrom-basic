@@ -37,17 +37,17 @@ jobs:
 
     # Step to capture Terraform output (Resource Group and AKS Cluster Name)
     - name: Capture Terraform Outputs
-  id: outputs
-  run: |
-    AKS_CLUSTER_NAME=$(terraform output -raw aks_cluster_name)
-    RESOURCE_GROUP=$(terraform output -raw aks_resource_group)
-    
-    # Debugging outputs to verify correctness
-    echo "AKS_CLUSTER_NAME is $AKS_CLUSTER_NAME"
-    echo "RESOURCE_GROUP is $RESOURCE_GROUP"
+      id: outputs
+      run: |
+        AKS_CLUSTER_NAME=$(terraform output -raw aks_cluster_name)
+        RESOURCE_GROUP=$(terraform output -raw aks_resource_group)
+        
+        # Debugging outputs to verify correctness
+        echo "AKS_CLUSTER_NAME is $AKS_CLUSTER_NAME"
+        echo "RESOURCE_GROUP is $RESOURCE_GROUP"
 
-    echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
-    echo "RESOURCE_GROUP=$RESOURCE_GROUP" >> $GITHUB_ENV
+        echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
+        echo "RESOURCE_GROUP=$RESOURCE_GROUP" >> $GITHUB_ENV
 
     # Step to get AKS credentials using Terraform outputs
     - name: Get AKS Credentials
