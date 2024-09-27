@@ -1,9 +1,9 @@
 name: Terraform AKS Deployment
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # This allows the workflow to be manually triggered
     inputs:
-      cluster_name:
+      cluster_name:   # Example of an input field for the manual trigger
         description: "Name of the AKS Cluster"
         required: true
         default: "my-cluster"
@@ -35,19 +35,17 @@ jobs:
       if: github.ref == 'refs/heads/main'
       run: terraform apply -auto-approve
 
-    # Capture resource group and AKS cluster name using Azure CLI
-    - name: Capture AKS and Resource Group Names
-      id: capture_names
+    # Extract resource group name and cluster name from tfvars file
+    - name: Get AKS Resource Information
       run: |
-        # Assuming your Terraform configuration has created these resources.
-        # Replace these values with the output names defined in your Terraform script if necessary.
-        RESOURCE_GROUP=$(az group list --query "[?contains(name, 'your-resource-group-prefix')].name" -o tsv)
-        AKS_CLUSTER_NAME=$(az aks list --resource-group $RESOURCE_GROUP --query "[].name" -o tsv)
-
-        echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV
+        RESOURCE_GROUP=$(grep 'resource_group_name' path/to/your.tfvars | cut -d '=' -f2 | tr -d ' "')
+        AKS_CLUSTER_NAME=$(grep 'cluster_name' path/to/your.tfvars | cut -d '=' -f2 | tr -d ' "')
+        
+        # Debugging outputs to verify correctness
         echo "AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}" >> $GITHUB_ENV
+        echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV
 
-    # Get AKS Credentials using the captured names
+    # Get AKS credentials using extracted values
     - name: Get AKS Credentials
       run: |
         az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} \
