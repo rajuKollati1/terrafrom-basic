@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: my-app
-        image: <your-docker-image> # Replace with your image name
+        image: nginx # Replace with your image name
         ports:
         - containerPort: 80
