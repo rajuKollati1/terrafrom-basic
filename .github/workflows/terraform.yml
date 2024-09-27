@@ -35,40 +35,30 @@ jobs:
       if: github.ref == 'refs/heads/main'
       run: terraform apply -auto-approve
 
-    # Capture Terraform Outputs
-    - name: Capture Terraform Outputs
-      id: capture_outputs
+    # Capture resource group and AKS cluster name using Azure CLI
+    - name: Capture AKS and Resource Group Names
+      id: capture_names
       run: |
-        # Capture outputs and remove surrounding quotes
-        AKS_CLUSTER_NAME=$(terraform output aks_cluster_name)
-        RESOURCE_GROUP=$(terraform output aks_resource_group)
+        # Assuming your Terraform configuration has created these resources.
+        # Replace these values with the output names defined in your Terraform script if necessary.
+        RESOURCE_GROUP=$(az group list --query "[?contains(name, 'your-resource-group-prefix')].name" -o tsv)
+        AKS_CLUSTER_NAME=$(az aks list --resource-group $RESOURCE_GROUP --query "[].name" -o tsv)
 
-        # Remove surrounding quotes if present
-        AKS_CLUSTER_NAME=$(echo $AKS_CLUSTER_NAME | tr -d '"')
-        RESOURCE_GROUP=$(echo $RESOURCE_GROUP | tr -d '"')
-
-        # Echo for debugging purposes
-        echo "AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}" >> $GITHUB_ENV
         echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV
+        echo "AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}" >> $GITHUB_ENV
 
-        # Check if values are captured correctly
-        if [ -z "$AKS_CLUSTER_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
-          echo "Failed to capture AKS_CLUSTER_NAME or RESOURCE_GROUP"
-          exit 1
-        fi
-
-    # Get AKS Credentials
+    # Get AKS Credentials using the captured names
     - name: Get AKS Credentials
       run: |
         az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} \
                                --name ${{ env.AKS_CLUSTER_NAME }} \
                                --admin
 
-    # Set up Kubectl
+    # Install kubectl
     - name: Set up Kubectl
       uses: azure/setup-kubectl@v3
 
-    # Deploy application to AKS
+    # Deploy application to AKS using Kubernetes manifests
     - name: Deploy to AKS
       run: |
         kubectl apply -f k8s-manifests/deployment.yaml
