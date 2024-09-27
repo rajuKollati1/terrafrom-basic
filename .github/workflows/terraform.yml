@@ -35,34 +35,30 @@ jobs:
       if: github.ref == 'refs/heads/main'
       run: terraform apply -auto-approve
 
-    # Step to capture Terraform output (Resource Group and AKS Cluster Name)
+    # Capture Terraform Outputs
     - name: Capture Terraform Outputs
-      id: outputs
+      id: capture_outputs
       run: |
-        # Capture raw output of the Terraform variables without using JSON
-        AKS_CLUSTER_NAME=$(terraform output -raw aks_cluster_name)
-        RESOURCE_GROUP=$(terraform output -raw aks_resource_group)
+        # Capture outputs directly without using -json or -raw
+        AKS_CLUSTER_NAME=$(terraform output aks_cluster_name)
+        RESOURCE_GROUP=$(terraform output aks_resource_group)
 
-        # Debugging outputs to verify correctness
-        echo "AKS_CLUSTER_NAME is $AKS_CLUSTER_NAME"
-        echo "RESOURCE_GROUP is $RESOURCE_GROUP"
+        # Echo for debugging purposes
+        echo "AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}" >> $GITHUB_ENV
+        echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV
 
-        # Write environment variables to GITHUB_ENV for later steps
-        echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
-        echo "RESOURCE_GROUP=$RESOURCE_GROUP" >> $GITHUB_ENV
-
-    # Step to get AKS credentials using Terraform outputs
+    # Get AKS Credentials
     - name: Get AKS Credentials
       run: |
         az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} \
                                --name ${{ env.AKS_CLUSTER_NAME }} \
                                --admin
 
-    # Install kubectl
+    # Set up Kubectl
     - name: Set up Kubectl
       uses: azure/setup-kubectl@v3
 
-    # Deploy application to AKS using Kubernetes manifests
+    # Deploy application to AKS
     - name: Deploy to AKS
       run: |
         kubectl apply -f k8s-manifests/deployment.yaml
