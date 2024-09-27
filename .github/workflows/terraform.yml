@@ -39,23 +39,23 @@ jobs:
     - name: Capture Terraform Outputs
       id: capture_outputs
       run: |
-        # Capture outputs directly and remove surrounding quotes
-        AKS_CLUSTER_NAME=$(terraform output aks_cluster_name | tr -d '"')
-        RESOURCE_GROUP=$(terraform output aks_resource_group | tr -d '"')
+        # Capture outputs and remove surrounding quotes
+        AKS_CLUSTER_NAME=$(terraform output aks_cluster_name)
+        RESOURCE_GROUP=$(terraform output aks_resource_group)
 
-        # Debugging outputs to verify correctness
-        echo "AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}"
-        echo "RESOURCE_GROUP=${RESOURCE_GROUP}"
+        # Remove surrounding quotes if present
+        AKS_CLUSTER_NAME=$(echo $AKS_CLUSTER_NAME | tr -d '"')
+        RESOURCE_GROUP=$(echo $RESOURCE_GROUP | tr -d '"')
+
+        # Echo for debugging purposes
+        echo "AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}" >> $GITHUB_ENV
+        echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV
 
         # Check if values are captured correctly
         if [ -z "$AKS_CLUSTER_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
           echo "Failed to capture AKS_CLUSTER_NAME or RESOURCE_GROUP"
           exit 1
         fi
-
-        # Store the values in GITHUB_ENV
-        echo "AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}" >> $GITHUB_ENV
-        echo "RESOURCE_GROUP=${RESOURCE_GROUP}" >> $GITHUB_ENV
 
     # Get AKS Credentials
     - name: Get AKS Credentials
