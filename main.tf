@@ -5,11 +5,11 @@ provider "azurerm" {
 
 terraform {
   backend "azurerm" {
-    resource_group_name  = "backend"
-    storage_account_name = "stbackendstr"
-    container_name       = "bkend"
+    resource_group_name  = "for-vms"
+    storage_account_name = "aksstroagebackend"
+    container_name       = "statefileoftf"
     key                  = "terraform.tfstate"
-    access_key           = "msjaY8hAm8GCrsO+sGf35lROqNE0kKwQlL6lCXwUvP95NOWsojduIYmUblyAs4Ji0xAKGfMc8jqK+AStBOwBoQ==" # Store this securely
+    access_key           = "u3APrVoEpypqBhvLRi9T5tyDjqyJCUQ8+TqcBL6iL4Unt05qe5WXinwm/jJ4ypVlyywa/ubmI7Uk+AStp2nd2w==" # Store this securely
   }
 }
 
