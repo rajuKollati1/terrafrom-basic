@@ -1,4 +1,4 @@
-subscription_id     = "b86f9eca-b158-43e1-80eb-422666bb88a4" 
+subscription_id     = "da18160d-d15e-45ae-91a5-0594b7ccb08f" 
 resource_group_name = "AKS_RG"
 location            = "Central India"
 cluster_name        = "MyAKSCluster"
