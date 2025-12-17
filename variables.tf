@@ -1,34 +1,17 @@
-variable "subscription_id" {
-  description = "Azure Subscription ID"
+variable "kubeconfig_path" {
+  description = "Path to the kubeconfig file for Kubernetes cluster access. Defaults to ~/.kube/config."
   type        = string
+  default     = "~/.kube/config"
 }
 
-variable "resource_group_name" {
-  description = "The name of the Resource Group"
+variable "app_name" {
+  description = "The name for the deployment and service."
   type        = string
+  default     = "nginx-example-app"
 }
 
-variable "location" {
-  description = "Azure region for the resources"
-  type        = string
-  default     = "East US"
-}
-
-variable "cluster_name" {
-  description = "The name of the AKS cluster"
-  type        = string
-}
-
-variable "node_count" {
-  description = "The number of nodes in the default node pool"
+variable "app_replicas" {
+  description = "Number of pod replicas for the application."
   type        = number
-  default     = 3
-}
-
-variable "tags" {
-  description = "A map of tags to add to the resources"
-  type        = map(string)
-  default     = {
-    environment = "dev"
-  }
+  default     = 2
 }

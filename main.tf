@@ -1,79 +1,76 @@
-provider "azurerm" {
-  features {}
-  subscription_id = var.subscription_id 
-}
-
 terraform {
-  backend "azurerm" {
-    resource_group_name  = "TerraformState_RG"
-    storage_account_name = "sstatefile"
-    container_name       = "statefile0001"
-    key                  = "terraform.tfstate"
-    access_key           = "m/Gc7qzsypXFTPY6Cb4f6nu7MWKhLCC+dTsWjr0eLvQdUDY3JzNn2BBbNC/C6eZT+/mU+2RxfixT+AStx9U0Sg==" # Store this securely
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.20.0"
+    }
   }
 }
 
-
-# Create Resource Group
-resource "azurerm_resource_group" "aks_rg" {
-  name     = var.resource_group_name
-  location = var.location
+# Configure the Kubernetes provider to connect to your cluster
+# It will use the kubeconfig file from your laptop.
+provider "kubernetes" {
+  config_path = var.kubeconfig_path
 }
 
-# Create Virtual Network
-resource "azurerm_virtual_network" "aks_vnet" {
-  name                = "${var.resource_group_name}-vnet"
-  location            = azurerm_resource_group.aks_rg.location
-  resource_group_name = azurerm_resource_group.aks_rg.name
-  address_space       = ["10.0.0.0/16"]
-}
-
-# Create Subnet for AKS
-resource "azurerm_subnet" "aks_subnet" {
-  name                 = "aks-subnet"
-  resource_group_name  = azurerm_resource_group.aks_rg.name
-  virtual_network_name = azurerm_virtual_network.aks_vnet.name
-  address_prefixes     = ["10.0.1.0/24"]
-}
-
-# Create AKS Cluster
-resource "azurerm_kubernetes_cluster" "aks" {
-  name                = var.cluster_name
-  location            = azurerm_resource_group.aks_rg.location
-  resource_group_name = azurerm_resource_group.aks_rg.name
-  dns_prefix          = "${var.cluster_name}-dns"
-
-  default_node_pool {
-    name       = "default"
-    node_count = var.node_count
-    vm_size    = "Standard_DS2_v2"
-    vnet_subnet_id = azurerm_subnet.aks_subnet.id
+# 1. Create a dedicated Namespace for our application
+resource "kubernetes_namespace_v1" "app_namespace" {
+  metadata {
+    name = "${var.app_name}-ns"
   }
+}
 
-  identity {
-    type = "SystemAssigned"
+# 2. Create the NGINX Deployment
+resource "kubernetes_deployment_v1" "nginx_deployment" {
+  metadata {
+    name      = var.app_name
+    namespace = kubernetes_namespace_v1.app_namespace.metadata.0.name
+    labels = {
+      app = var.app_name
+    }
   }
-
-  network_profile {
-    network_plugin    = "azure"
-    load_balancer_sku = "standard"
-    service_cidr      = "10.0.2.0/24"
-    dns_service_ip    = "10.0.2.10"
+  spec {
+    replicas = var.app_replicas
+    selector {
+      match_labels = {
+        app = var.app_name
+      }
+    }
+    template {
+      metadata {
+        labels = {
+          app = var.app_name
+        }
+      }
+      spec {
+        container {
+          image = "nginx:1.23"
+          name  = var.app_name
+          port {
+            container_port = 80
+          }
+        }
+      }
+    }
   }
-
-  tags = var.tags
 }
 
-# Outputs
-output "aks_cluster_name" {
-  value = azurerm_kubernetes_cluster.aks.name
-}
-
-output "aks_cluster_kube_config" {
-  value     = azurerm_kubernetes_cluster.aks.kube_config_raw
-  sensitive = true  # Mark this as sensitive
-}
-
-output "aks_resource_group" {
-  value = azurerm_resource_group.aks_rg.name
+# 3. Expose the Deployment with a Service
+resource "kubernetes_service_v1" "nginx_service" {
+  metadata {
+    name      = "${var.app_name}-svc"
+    namespace = kubernetes_namespace_v1.app_namespace.metadata.0.name
+  }
+  spec {
+    selector = {
+      app = var.app_name
+    }
+    port {
+      port        = 80
+      target_port = 80
+    }
+    # Use LoadBalancer to expose the service externally.
+    # For internal-only, you could use "ClusterIP".
+    type = "LoadBalancer"
+  }
 }
