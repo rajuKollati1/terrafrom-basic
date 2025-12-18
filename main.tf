@@ -47,7 +47,7 @@ resource "kubernetes_deployment_v1" "nginx_deployment" {
           image = "nginx:1.23"
           name  = var.app_name
           port {
-            container_port = 80
+            container_port = 8080
           }
         }
       }
@@ -71,6 +71,6 @@ resource "kubernetes_service_v1" "nginx_service" {
     }
     # Use LoadBalancer to expose the service externally.
     # For internal-only, you could use "ClusterIP".
-    type = "LoadBalancer"
+    type = "NodePort"
   }
 }
